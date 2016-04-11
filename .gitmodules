@@ -1,0 +1,3 @@
+[submodule "MGWordCounter"]
+	path = MGWordCounter
+	url = https://github.com/mattgemmell/MGWordCounter.git
