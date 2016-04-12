@@ -64,7 +64,7 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 			if ( !((substringRange.location == range.location && startsInWord) || endsInWord) ) {
 				replacedWords += 1;
 			}
-			if ( NSMaxRange(substringRange) > replacedTextEnd ) {
+			if ( NSMaxRange(substringRange) >= replacedTextEnd ) {
 				*stop = YES;
 			}
 		}];

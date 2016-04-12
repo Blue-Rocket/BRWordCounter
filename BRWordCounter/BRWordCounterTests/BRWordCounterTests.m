@@ -108,6 +108,46 @@
 	OCMVerifyAll(delegate);
 }
 
+- (void)testTypingDeleteAtBeginning {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:8];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *textToType = @"This is the text I want to type.";
+	NSMutableArray<NSNumber *> *wordIndexes = [@[@5, @8, @12, @16, @18, @23, @26, @29] mutableCopy];
+	__block NSUInteger i = 0;
+	NSUInteger len = textToType.length;
+	
+	__block NSUInteger resolvedWordCount = 0;
+	
+	for ( ; i < len; i += 1 ) {
+		if ( wordIndexes.count > 0 && i >= [wordIndexes[0] unsignedIntegerValue] ) {
+			[wordIndexes removeObjectAtIndex:0];
+			NSUInteger idx = wordIndexes.count;
+			NSLog(@"Expecting notification for word count %@", @(idx));
+			[self expectationForNotification:@"WordCountDidChange" object:counter handler:^BOOL(NSNotification * _Nonnull notification) {
+				resolvedWordCount = [notification.userInfo[@"wordCount"] unsignedIntegerValue];
+				BOOL resolved = (resolvedWordCount == idx);
+				NSLog(@"Notification word count %@ resolved to %@: %@", notification.userInfo[@"wordCount"], @(idx), (resolved ? @"YES" : @"NO"));
+				return resolved;
+			}];
+			OCMExpect([delegate wordCounter:counter wordCountDidChange:idx])
+				.andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter userInfo:@{@"wordCount":@(idx)}]);
+		}
+		OCMExpect([textViewMock text]).andReturn([textToType substringFromIndex:i]);
+		NSString *typedText = @"";
+		[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(0, 1) replacementText:typedText];
+	}
+	
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(0));
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAll(delegate);
+}
+
 - (void)testPasteAtStartAddWords {
 	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
 	id textViewMock = OCMClassMock([UITextView class]);
