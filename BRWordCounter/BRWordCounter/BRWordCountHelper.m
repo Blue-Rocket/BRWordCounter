@@ -58,6 +58,10 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 		}];
 		[oldText enumerateSubstringsInRange:NSMakeRange(range.location, oldText.length - range.location) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
 			NSLog(@"Old text “%@” word “%@” found at %@; %@", oldText, [oldText substringWithRange:substringRange], NSStringFromRange(substringRange), NSStringFromRange(range));
+			if ( substringRange.location > replacedTextEnd ) {
+				*stop =YES;
+				return;
+			}
 			if ( NSLocationInRange(replacedTextEnd, substringRange) ) {
 				endsInWord = YES;
 			}
