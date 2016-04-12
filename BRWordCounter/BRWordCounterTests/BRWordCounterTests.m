@@ -30,7 +30,7 @@
 - (void)testTyping {
 	BRWordCountHelper *counter = [BRWordCountHelper new];
 	id textViewMock = OCMClassMock([UITextView class]);
-	id<BRWordCountDelegate> delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
 	counter.delegate = delegate;
 	
 	__block NSUInteger i = 0;
@@ -38,13 +38,6 @@
 	NSUInteger len;
 	NSString *textToType = @"This is the text I want to type.";
 	NSArray<NSNumber *> *wordIndexes = @[@0, @5, @8, @12, @16, @18, @23, @26];
-	
-	OCMStub([textViewMock text]).andDo(^(NSInvocation *invocation) {
-		NSString *result = [textToType substringToIndex:i];
-		[invocation retainArguments];
-		[invocation setReturnValue:&result];
-	});
-	
 	
 	__block NSUInteger resolvedWordCount = 0;
 
@@ -59,9 +52,10 @@
 				NSLog(@"Notification word count %@ resolved %@", notification.userInfo[@"wordCount"], (resolved ? @"YES" : @"NO"));
 				return resolved;
 			}];
-			OCMStub([delegate wordCounter:counter wordCountDidChange:idx])
-			.andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter userInfo:@{@"wordCount":@(idx)}]);
+			OCMExpect([delegate wordCounter:counter wordCountDidChange:idx])
+				.andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter userInfo:@{@"wordCount":@(idx)}]);
 		}
+		OCMExpect([textViewMock text]).andReturn([textToType substringToIndex:i]);
 		NSString *typedText = [textToType substringWithRange:NSMakeRange(i, 1)];
 		[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(i, 0) replacementText:typedText];
 	}
@@ -69,19 +63,22 @@
 	[self waitForExpectationsWithTimeout:2 handler:nil];
 	
 	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(8));
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAll(delegate);
 }
 
 - (void)testPasteAtStartAddWords {
 	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
 	id textViewMock = OCMClassMock([UITextView class]);
-	id<BRWordCountDelegate> delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
 	counter.delegate = delegate;
 
 	NSString *startingText = @"This is the text.";
 	NSString *insertText = @"More text. ";
 
-	OCMStub([textViewMock text]).andReturn(startingText);
-	OCMStub([delegate wordCounter:counter wordCountDidChange:6]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	OCMExpect([delegate wordCounter:counter wordCountDidChange:6]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);
 	
 	[self expectationForNotification:@"WordCountDidChange" object:counter handler:^BOOL(NSNotification * _Nonnull notification) {
 		return YES;
@@ -91,26 +88,29 @@
 	
 	[self waitForExpectationsWithTimeout:2 handler:nil];
 	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(6));
+	
 	OCMVerifyAll(textViewMock);
-	OCMVerifyAll((id)delegate);
+	OCMVerifyAll(delegate);
 }
 
 - (void)testPasteAtStartUnchangedWords {
 	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
 	id textViewMock = OCMClassMock([UITextView class]);
-	id<BRWordCountDelegate> delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
 	counter.delegate = delegate;
 	
 	NSString *startingText = @"This is the text.";
 	NSString *insertText = @"BUT";
 	
-	OCMStub([textViewMock text]).andReturn(startingText);
-	//OCMStub([delegate wordCounter:counter wordCountDidChange:6]);
+	OCMExpect([textViewMock text]).andReturn(startingText);
 	
 	[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(0, 0) replacementText:insertText];
 	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(4));
+	
 	OCMVerifyAll(textViewMock);
-	OCMVerifyAll((id)delegate);
+	OCMVerifyAll(delegate);
 }
 
 @end
