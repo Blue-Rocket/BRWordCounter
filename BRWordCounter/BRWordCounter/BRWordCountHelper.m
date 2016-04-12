@@ -40,8 +40,9 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
 	NSString *oldText = CurrentTextInView(textView);
 	//NSString *replacedText = [oldText substringWithRange:range];
+	NSUInteger oldTextMaxRange = NSMaxRange(range);
 	NSUInteger expandedStart = (range.location > 0 ? range.location - 1 : 0);
-	NSUInteger expandedEnd = (NSMaxRange(range) < oldText.length ? NSMaxRange(range) + 1 : oldText.length);
+	NSUInteger expandedEnd = (oldTextMaxRange < oldText.length ? oldTextMaxRange + 1 : oldText.length);
 	NSRange expandedRange = NSMakeRange(expandedStart, expandedEnd - expandedStart);
 	dispatch_async(queue, ^{
 		NSUInteger startingWordCount = wordCount;
@@ -56,10 +57,10 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 			if ( substringRange.location == expandedRange.location && (range.location > 0) ) {
 				startsInWord = YES;
 			}
-			if ( maxRange == NSMaxRange(expandedRange) && (range.location < oldText.length) ) {
+			if ( maxRange == expandedEnd && (oldTextMaxRange < oldText.length) ) {
 				endsInWord = YES;
 			}
-			if ( substringRange.location > 0 && maxRange < NSMaxRange(expandedRange) ) {
+			if ( substringRange.location > range.location && maxRange < expandedEnd ) {
 				replacedWords++;
 			}
 		}];
