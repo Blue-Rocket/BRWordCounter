@@ -75,7 +75,7 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 		
 		[text enumerateSubstringsInRange:NSMakeRange(0, text.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL * _Nonnull stop) {
 			NSLog(@"New text “%@” word “%@” found at %@", text, [text substringWithRange:substringRange], NSStringFromRange(substringRange));
-			if ( !((substringRange.location == 0 && startsInWord) || (NSMaxRange(substringRange) == text.length && endsInWord)) ) {
+			if ( !((substringRange.location == 0 && startsInWord) || (NSMaxRange(substringRange) == text.length && endsInWord)) || (startsInWord && endsInWord && addedWords > 0) ) {
 				addedWords += 1;
 			}
 		}];

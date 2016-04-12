@@ -200,6 +200,32 @@
 	OCMVerifyAll(delegate);
 }
 
+- (void)testPasteInMiddleWithinWordBoundariesAddWords {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:3];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *startingText = @"This is text.";
+	NSString *insertText = @"MORE AND MORE TEXT";
+	
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	OCMExpect([delegate wordCounter:counter wordCountDidChange:6]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);
+	
+	[self expectationForNotification:@"WordCountDidChange" object:counter handler:^BOOL(NSNotification * _Nonnull notification) {
+		return YES;
+	}];
+	
+	[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(6, 0) replacementText:insertText];
+	
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(6));
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAll(delegate);
+}
+
 - (void)testPasteAtEndAddWords {
 	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
 	id textViewMock = OCMClassMock([UITextView class]);
