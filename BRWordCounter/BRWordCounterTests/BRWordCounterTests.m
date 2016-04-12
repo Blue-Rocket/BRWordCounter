@@ -68,6 +68,46 @@
 	OCMVerifyAll(delegate);
 }
 
+- (void)testTypingBackspaceAtEnd {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:8];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *textToType = @"This is the text I want to type.";
+	NSArray<NSNumber *> *wordIndexes = @[@0, @5, @8, @12, @16, @18, @23, @26];
+	__block NSUInteger i = textToType.length;
+	__block NSUInteger wordIndex = 7;
+	
+	__block NSUInteger resolvedWordCount = 0;
+	
+	for ( ; i > 0; i -= 1 ) {
+		if ( wordIndex > 0 && i < [wordIndexes[wordIndex] unsignedIntegerValue] ) {
+			wordIndex -= 1;
+			NSUInteger idx = wordIndex;
+			NSLog(@"Expecting notification for word count %@", @(idx));
+			[self expectationForNotification:@"WordCountDidChange" object:counter handler:^BOOL(NSNotification * _Nonnull notification) {
+				resolvedWordCount = [notification.userInfo[@"wordCount"] unsignedIntegerValue];
+				BOOL resolved = (resolvedWordCount == idx);
+				NSLog(@"Notification word count %@ resolved %@", notification.userInfo[@"wordCount"], (resolved ? @"YES" : @"NO"));
+				return resolved;
+			}];
+			OCMExpect([delegate wordCounter:counter wordCountDidChange:idx])
+				.andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter userInfo:@{@"wordCount":@(idx)}]);
+		}
+		OCMExpect([textViewMock text]).andReturn([textToType substringToIndex:i]);
+		NSString *typedText = @"";
+		[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(i - 1, 1) replacementText:typedText];
+	}
+	
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(0));
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAll(delegate);
+}
+
 - (void)testPasteAtStartAddWords {
 	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
 	id textViewMock = OCMClassMock([UITextView class]);

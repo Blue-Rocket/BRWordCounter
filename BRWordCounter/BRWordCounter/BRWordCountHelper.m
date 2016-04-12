@@ -39,11 +39,8 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
 	NSString *oldText = CurrentTextInView(textView);
-	//NSString *replacedText = [oldText substringWithRange:range];
-	NSUInteger oldTextMaxRange = NSMaxRange(range);
-	NSUInteger expandedStart = (range.location > 0 ? range.location - 1 : 0);
-	NSUInteger expandedEnd = (oldTextMaxRange < oldText.length ? oldTextMaxRange + 1 : oldText.length);
-	NSRange expandedRange = NSMakeRange(expandedStart, expandedEnd - expandedStart);
+	NSUInteger replacedTextEnd = NSMaxRange(range);
+
 	dispatch_async(queue, ^{
 		NSUInteger startingWordCount = wordCount;
 		__block NSUInteger replacedWords = 0;
@@ -51,35 +48,34 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 		__block BOOL startsInWord = NO;
 		__block BOOL endsInWord = NO;
 		
-		[oldText enumerateSubstringsInRange:expandedRange options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
-			NSLog(@"Old text “%@” word found at %@; %@", oldText, NSStringFromRange(substringRange), NSStringFromRange(range));
+		[oldText enumerateSubstringsInRange:NSMakeRange(0, range.location) options:(NSStringEnumerationByWords|NSStringEnumerationReverse) usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+			NSLog(@"Old text “%@” word “%@” found at %@; %@", oldText, [oldText substringWithRange:substringRange], NSStringFromRange(substringRange), NSStringFromRange(range));
 			NSUInteger maxRange = NSMaxRange(substringRange);
-			if ( substringRange.location == expandedRange.location && (range.location > 0) ) {
+			if ( maxRange == range.location ) {
 				startsInWord = YES;
 			}
-			if ( maxRange == expandedEnd && (oldTextMaxRange < oldText.length) ) {
+			*stop = YES;
+		}];
+		[oldText enumerateSubstringsInRange:NSMakeRange(range.location, oldText.length - range.location) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+			NSLog(@"Old text “%@” word “%@” found at %@; %@", oldText, [oldText substringWithRange:substringRange], NSStringFromRange(substringRange), NSStringFromRange(range));
+			if ( NSLocationInRange(replacedTextEnd, substringRange) ) {
 				endsInWord = YES;
 			}
-			if ( substringRange.location > range.location && maxRange < expandedEnd ) {
-				replacedWords++;
+			if ( !((substringRange.location == range.location && startsInWord) || endsInWord) ) {
+				replacedWords += 1;
+			}
+			if ( NSMaxRange(substringRange) > replacedTextEnd ) {
+				*stop = YES;
 			}
 		}];
 		
 		[text enumerateSubstringsInRange:NSMakeRange(0, text.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL * _Nonnull stop) {
-			NSLog(@"Replacement text “%@” word found at %@", text, NSStringFromRange(substringRange));
-			NSUInteger maxRange = NSMaxRange(substringRange);
-			if ( substringRange.location == 0 ) {
-				if ( !startsInWord ) {
-					addedWords++;
-				}
-			} else if ( maxRange == text.length ) {
-				if ( !endsInWord ) {
-					addedWords++;
-				}
-			} else {
-				addedWords++;
+			NSLog(@"New text “%@” word “%@” found at %@", text, [text substringWithRange:substringRange], NSStringFromRange(substringRange));
+			if ( !((substringRange.location == 0 && startsInWord) || (NSMaxRange(substringRange) == text.length && endsInWord)) ) {
+				addedWords += 1;
 			}
 		}];
+		
 		NSInteger diff = (addedWords - replacedWords);
 		NSUInteger finalWordCount = (startingWordCount + diff);
 		NSLog(@"Got final word count %lu for text: %@", (unsigned long)finalWordCount, [oldText stringByReplacingCharactersInRange:range withString:text]);
