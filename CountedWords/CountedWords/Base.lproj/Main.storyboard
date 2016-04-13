@@ -28,21 +28,30 @@
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Word count:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ryB-aR-FMg">
                                 <rect key="frame" x="20" y="28" width="100" height="21"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="N/A" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="XN5-yG-2ed">
                                 <rect key="frame" x="128" y="28" width="29" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="V4B-IG-PID">
+                                <rect key="frame" x="541" y="24" width="39" height="30"/>
+                                <state key="normal" title="Reset"/>
+                                <connections>
+                                    <action selector="reset:" destination="BYZ-38-t0r" eventType="touchUpInside" id="flY-Cv-yf7"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="Ykm-E2-Wbj" firstAttribute="top" secondItem="XN5-yG-2ed" secondAttribute="bottom" constant="8" id="5c6-Sl-csE"/>
                             <constraint firstItem="ryB-aR-FMg" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="8" id="8GH-1I-4BJ"/>
+                            <constraint firstItem="V4B-IG-PID" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailingMargin" id="HKB-CG-pId"/>
                             <constraint firstItem="Ykm-E2-Wbj" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="KmC-Lc-CGq"/>
+                            <constraint firstItem="V4B-IG-PID" firstAttribute="baseline" secondItem="ryB-aR-FMg" secondAttribute="baseline" id="MDW-YO-E3V"/>
                             <constraint firstItem="XN5-yG-2ed" firstAttribute="leading" secondItem="ryB-aR-FMg" secondAttribute="trailing" constant="8" id="SoD-tT-ZBM"/>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="Ykm-E2-Wbj" secondAttribute="bottom" id="aLT-LR-v6H"/>
                             <constraint firstItem="Ykm-E2-Wbj" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailingMargin" id="h7W-a0-sbd"/>

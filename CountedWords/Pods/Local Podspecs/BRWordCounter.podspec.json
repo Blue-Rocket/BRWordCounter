@@ -1,6 +1,6 @@
 {
   "name": "BRWordCounter",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "summary": "Live word-counting for NSTextView on OS X and UITextView on iOS.",
   "description": "This project provides a way to efficiently count the words in a text view while editing.",
   "homepage": "https://github.com/Blue-Rocket/BRWordCounter",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/Blue-Rocket/BRWordCounter.git",
-    "tag": "2.0.0"
+    "tag": "2.0.1"
   },
   "requires_arc": true,
   "default_subspecs": "Main",
