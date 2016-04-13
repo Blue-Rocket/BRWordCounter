@@ -18,6 +18,15 @@
 
 static const char * kWordCountQueueName = "us.bluerocket.BRWordCountHelper";
 
+static NSRegularExpression *LastWordWithPunctuationRegularExpression() {
+	static NSRegularExpression *LastWordWithPunctuation;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		LastWordWithPunctuation = [NSRegularExpression regularExpressionWithPattern:@"\\b\\w+\\W+$" options:NSRegularExpressionUseUnicodeWordBoundaries error:nil];
+	});
+	return LastWordWithPunctuation;
+}
+
 @implementation BRWordCountHelper {
 	// our serial counting queue... only one count operation at a time (per/helper)
 	dispatch_queue_t queue;
@@ -68,6 +77,7 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 		__block NSUInteger newWords = 0;
 		__block BOOL startsInWord = NO;
 		__block BOOL endsInWord = NO;
+		__block NSRange firstAddedWordRange = NSMakeRange(NSNotFound, 0);
 		
 		[oldText enumerateSubstringsInRange:NSMakeRange(0, range.location) options:(NSStringEnumerationByWords|NSStringEnumerationReverse) usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
 			BRLog(@"Old text “%@” word “%@” found at %@; %@", oldText, [oldText substringWithRange:substringRange], NSStringFromRange(substringRange), NSStringFromRange(range));
@@ -99,14 +109,31 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 			newWords += 1;
 			if ( !((substringRange.location == 0 && startsInWord) || (NSMaxRange(substringRange) == text.length && endsInWord)) || (startsInWord && endsInWord && addedWords > 0) ) {
 				addedWords += 1;
+				if ( firstAddedWordRange.location == NSNotFound ) {
+					firstAddedWordRange = substringRange;
+				}
 			}
 		}];
 		
-		NSInteger diff = (addedWords - replacedWords);
+		__block NSInteger diff = (addedWords - replacedWords);
 		
 		if ( startsInWord && endsInWord && newWords == 0 && range.length == 0 && text.length > 0 ) {
 			// split word in two
 			diff += 1;
+		} else if ( firstAddedWordRange.location == 0 && [oldText rangeOfCharacterFromSet:[NSCharacterSet punctuationCharacterSet] options:(NSBackwardsSearch|NSAnchoredSearch)].location != NSNotFound ) {
+			// edge case of going from "don'" -> "don't"; we don't know that's actually a single word unless we combine the old + new text and look
+			// try to be easy on copying large strings here... by looking for a word boundary that can serve as our contraction prefix
+			NSRange wordRange = [LastWordWithPunctuationRegularExpression() rangeOfFirstMatchInString:oldText options:0 range:NSMakeRange(0, range.location)];
+			if ( wordRange.location != NSNotFound ) {
+				NSString *possibleSingleWord = [[oldText substringWithRange:wordRange] stringByAppendingString:text];
+				[possibleSingleWord enumerateSubstringsInRange:NSMakeRange(0, possibleSingleWord.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable substring, NSRange substringRange, NSRange enclosingRange, BOOL * _Nonnull stop) {
+					BRLog(@"Possible combined text “%@” word “%@” found at %@", possibleSingleWord, [possibleSingleWord substringWithRange:substringRange], NSStringFromRange(substringRange));
+					if ( substringRange.location == 0 && substringRange.length > wordRange.length ) {
+						diff -= 1;
+					}
+					*stop = YES;
+				}];
+			}
 		}
 		
 		NSUInteger finalWordCount = (startingWordCount + diff);
