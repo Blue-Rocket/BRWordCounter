@@ -32,6 +32,17 @@ static const char * kWordCountQueueName = "us.bluerocket.BRWordCountHelper";
 	return self;
 }
 
+- (instancetype)initWithTextView:(UITextView *)textView delegate:(nullable id<BRWordCountDelegate>)delegate {
+	if ( (self = [self initWithWordCount:0]) ) {
+		textView.delegate = self;
+		self.delegate = delegate;
+		[BRWordCountHelper countWordsInString:textView.text queue:queue finished:^(NSUInteger count) {
+			wordCount = count;
+		}];
+	}
+	return self;
+}
+
 // this method is here with OS X in mind, to support NSTextView by changing the view parameter to id
 static inline NSString *CurrentTextInView(UITextView *view) {
 	return view.text;
@@ -90,9 +101,30 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 			});
 		}
 	});
-
 	
 	return YES;
+}
+
++ (void)countWordsInString:(NSString *)string finished:(void (^)(NSUInteger wordCount))callback {
+	[self countWordsInString:string queue:nil finished:callback];
+}
+
++ (void)countWordsInString:(NSString *)string queue:(dispatch_queue_t)queue finished:(void (^)(NSUInteger wordCount))callback {
+	if ( !callback ) {
+		return;
+	}
+	if ( !queue ) {
+		queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	}
+	dispatch_async(queue, ^{
+		__block NSUInteger count = 0;
+		[string enumerateSubstringsInRange:NSMakeRange(0, string.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+			count += 1;
+		}];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			callback(count);
+		});
+	});
 }
 
 @end

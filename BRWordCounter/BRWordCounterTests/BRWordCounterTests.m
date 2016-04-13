@@ -27,6 +27,88 @@
 
 @implementation BRWordCounterTests
 
+- (void)testCountWordsNilString {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonnull"
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:nil finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(0));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+#pragma clang diagnostic pop
+}
+
+- (void)testCountWordsNilCallback {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonnull"
+	[BRWordCountHelper countWordsInString:@"FOO" finished:nil];
+#pragma clang diagnostic pop
+}
+
+- (void)testCountWordsEmptyString {
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:@"" finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(0));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
+- (void)testCountWord {
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:@"word" finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(1));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
+- (void)testCountWordWithWhitespace {
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:@"\n word \n" finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(1));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
+- (void)testCountWordsWithPunctuation {
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:@"Here, we have an actual (lovely) sentence; behold!" finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(8));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
+- (void)testCountWordsWithPossessives {
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:@"The dude's beard grows! The ladies' handbags grow!" finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(8));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
+- (void)testCountWordsWithFancyPossessives {
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:@"The dude’s beard grows! The ladies’ handbags grow!" finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(8));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
+- (void)testCountWordsWithSingleQuotes {
+	XCTestExpectation *expectation = [self expectationWithDescription:@"Count"];
+	[BRWordCountHelper countWordsInString:@"The 'quoted' string." finished:^(NSUInteger wordCount) {
+		assertThatUnsignedInteger(wordCount, equalToUnsignedInteger(3));
+		[expectation fulfill];
+	}];
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
 - (void)testTyping {
 	BRWordCountHelper *counter = [BRWordCountHelper new];
 	id textViewMock = OCMClassMock([UITextView class]);
