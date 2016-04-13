@@ -139,7 +139,9 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 		NSUInteger finalWordCount = (startingWordCount + diff);
 		BRLog(@"Got final word count %lu for text: %@", (unsigned long)finalWordCount, [oldText stringByReplacingCharactersInRange:range withString:text]);
 		if ( wordCount != finalWordCount ) {
+			[self willChangeValueForKey:@"wordCount"];
 			wordCount = finalWordCount;
+			[self didChangeValueForKey:@"wordCount"];
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[self.delegate wordCounter:self wordCountDidChange:finalWordCount];
 			});

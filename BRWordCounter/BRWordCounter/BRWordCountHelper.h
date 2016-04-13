@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** The delegate to respond to word count events. */
 @property (nonatomic, strong, nullable) id<BRWordCountDelegate> delegate;
 
-/** The current word count. */
+/** The current word count. KVO compliant. Note KVO notfications will be on a background thread! */
 @property (nonatomic, readonly) NSUInteger wordCount;
 
 /**
