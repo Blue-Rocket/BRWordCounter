@@ -1,0 +1,16 @@
+PODS:
+  - BRWordCounter (2.0.0):
+    - BRWordCounter/Main (= 2.0.0)
+  - BRWordCounter/Main (2.0.0)
+
+DEPENDENCIES:
+  - BRWordCounter (from `../`)
+
+EXTERNAL SOURCES:
+  BRWordCounter:
+    :path: ../
+
+SPEC CHECKSUMS:
+  BRWordCounter: 5b6f20b4ff6f2a7d69abbb3dddb9c1102a64bb34
+
+COCOAPODS: 0.39.0

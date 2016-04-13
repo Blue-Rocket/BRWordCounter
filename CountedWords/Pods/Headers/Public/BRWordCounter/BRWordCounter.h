@@ -1,0 +1,1 @@
+../../../../../BRWordCounter/Packaging/BRWordCounter.h
