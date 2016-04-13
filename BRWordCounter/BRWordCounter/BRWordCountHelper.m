@@ -59,6 +59,7 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 		NSUInteger startingWordCount = wordCount;
 		__block NSUInteger replacedWords = 0;
 		__block NSUInteger addedWords = 0;
+		__block NSUInteger newWords = 0;
 		__block BOOL startsInWord = NO;
 		__block BOOL endsInWord = NO;
 		
@@ -89,12 +90,19 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 		
 		[text enumerateSubstringsInRange:NSMakeRange(0, text.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL * _Nonnull stop) {
 			//NSLog(@"New text “%@” word “%@” found at %@", text, [text substringWithRange:substringRange], NSStringFromRange(substringRange));
+			newWords += 1;
 			if ( !((substringRange.location == 0 && startsInWord) || (NSMaxRange(substringRange) == text.length && endsInWord)) || (startsInWord && endsInWord && addedWords > 0) ) {
 				addedWords += 1;
 			}
 		}];
 		
 		NSInteger diff = (addedWords - replacedWords);
+		
+		if ( startsInWord && endsInWord && newWords == 0 && range.length == 0 && text.length > 0 ) {
+			// split word in two
+			diff += 1;
+		}
+		
 		NSUInteger finalWordCount = (startingWordCount + diff);
 		//NSLog(@"Got final word count %lu for text: %@", (unsigned long)finalWordCount, [oldText stringByReplacingCharactersInRange:range withString:text]);
 		if ( wordCount != finalWordCount ) {
