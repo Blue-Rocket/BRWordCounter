@@ -1,0 +1,18 @@
+# xcode noise
+*.mode1v3
+*.pbxuser
+*.perspective
+*.perspectivev3
+*.pyc
+*~.nib/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+xcuserdata
+
+# old skool
+.svn
+
+# osx noise
+.DS_Store
+
