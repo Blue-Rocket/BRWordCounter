@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "BRWordCounter"
-  s.version      = "2.0.0"
+  s.version      = "2.0.1"
   s.summary      = "Live word-counting for NSTextView on OS X and UITextView on iOS."
   s.description  = <<-DESC
                    This project provides a way to efficiently count the words in a text view while editing.
