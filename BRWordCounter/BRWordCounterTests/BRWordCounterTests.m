@@ -297,6 +297,27 @@
 	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(4));
 }
 
+- (void)testInsertCharacterAtEndOfWord {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *startingText = @"Thi is the text.";
+	NSString *insertText = @"s";
+	NSRange replaceRange = NSMakeRange(3, 0);
+	NSUInteger finalWordCount = 4;
+	
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	
+	[counter textView:textViewMock shouldChangeTextInRange:replaceRange replacementText:insertText];
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAllWithDelay(delegate, 0.1);
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(finalWordCount));
+}
+
 - (void)testInsertSpaceInFirstWord {
 	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:3];
 	id textViewMock = OCMClassMock([UITextView class]);
@@ -307,6 +328,35 @@
 	NSString *insertText = @" ";
 	NSRange replaceRange = NSMakeRange(2, 0);
 	NSUInteger finalWordCount = 4;
+	
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	OCMExpect([delegate wordCounter:counter wordCountDidChange:finalWordCount]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);
+	
+	[self expectationForNotification:@"WordCountDidChange" object:counter handler:^BOOL(NSNotification * _Nonnull notification) {
+		return YES;
+	}];
+	
+	
+	[counter textView:textViewMock shouldChangeTextInRange:replaceRange replacementText:insertText];
+	
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAllWithDelay(delegate, 0.1);
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(finalWordCount));
+}
+
+- (void)testInsertSpaceInMiddleWord {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:6];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *startingText = @"Do or donot the saying goes.";
+	NSString *insertText = @" ";
+	NSRange replaceRange = NSMakeRange(8, 0);
+	NSUInteger finalWordCount = 7;
 	
 	OCMExpect([textViewMock text]).andReturn(startingText);
 	OCMExpect([delegate wordCounter:counter wordCountDidChange:finalWordCount]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);
