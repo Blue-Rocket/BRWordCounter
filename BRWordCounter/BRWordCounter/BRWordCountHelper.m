@@ -18,15 +18,6 @@
 
 static const char * kWordCountQueueName = "us.bluerocket.BRWordCountHelper";
 
-static NSRegularExpression *LastWordWithPunctuationRegularExpression() {
-	static NSRegularExpression *LastWordWithPunctuation;
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		LastWordWithPunctuation = [NSRegularExpression regularExpressionWithPattern:@"\\b\\w+\\W+$" options:NSRegularExpressionUseUnicodeWordBoundaries error:nil];
-	});
-	return LastWordWithPunctuation;
-}
-
 @implementation BRWordCountHelper {
 	// our serial counting queue... only one count operation at a time (per/helper)
 	dispatch_queue_t queue;
@@ -71,71 +62,51 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 	NSUInteger replacedTextEnd = NSMaxRange(range);
 
 	dispatch_async(queue, ^{
-		NSUInteger startingWordCount = wordCount;
-		__block NSUInteger replacedWords = 0;
-		__block NSUInteger addedWords = 0;
-		__block NSUInteger newWords = 0;
-		__block BOOL startsInWord = NO;
-		__block BOOL endsInWord = NO;
-		__block NSRange firstAddedWordRange = NSMakeRange(NSNotFound, 0);
 		
-		[oldText enumerateSubstringsInRange:NSMakeRange(0, range.location) options:(NSStringEnumerationByWords|NSStringEnumerationReverse) usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+		// The general strategy used here is to examine the current text for word boundaries before/after the changing range, and then
+		// compare the number of words in that range to the equivalent range in the updated text. This allows for contractions that
+		// are formed or removed to be counted correctly without counting all words in the entire updated text each time.
+		
+		NSUInteger startingWordCount = wordCount;
+		__block NSUInteger start = range.location;
+		__block NSUInteger end = replacedTextEnd;
+		__block NSUInteger replacedWordCount = 0;
+		__block NSUInteger addedWordCount = 0;
+		
+		// find the start of word before our change range
+		[oldText enumerateSubstringsInRange:NSMakeRange(0, range.location) options:(NSStringEnumerationByWords|NSStringEnumerationReverse|NSStringEnumerationSubstringNotRequired) usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
 			BRLog(@"Old text “%@” word “%@” found at %@; %@", oldText, [oldText substringWithRange:substringRange], NSStringFromRange(substringRange), NSStringFromRange(range));
-			NSUInteger maxRange = NSMaxRange(substringRange);
-			if ( maxRange == range.location ) {
-				startsInWord = YES;
-			}
+			start = substringRange.location;
 			*stop = YES;
 		}];
-		[oldText enumerateSubstringsInRange:NSMakeRange(range.location, oldText.length - range.location) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+		
+		// count all words being replaced, and note the end of the last word after change range
+		[oldText enumerateSubstringsInRange:NSMakeRange(start, oldText.length - start) options:(NSStringEnumerationByWords|NSStringEnumerationSubstringNotRequired) usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
 			BRLog(@"Old text “%@” word “%@” found at %@; %@", oldText, [oldText substringWithRange:substringRange], NSStringFromRange(substringRange), NSStringFromRange(range));
 			if ( substringRange.location > replacedTextEnd ) {
-				*stop =YES;
-				return;
-			}
-			if ( NSLocationInRange(replacedTextEnd, substringRange) ) {
-				endsInWord = YES;
-			}
-			if ( !((substringRange.location == range.location && startsInWord) || endsInWord) ) {
-				replacedWords += 1;
-			}
-			if ( NSMaxRange(substringRange) >= replacedTextEnd ) {
 				*stop = YES;
+			} else {
+				replacedWordCount += 1;
+				end = NSMaxRange(substringRange);
 			}
 		}];
 		
-		[text enumerateSubstringsInRange:NSMakeRange(0, text.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL * _Nonnull stop) {
-			BRLog(@"New text “%@” word “%@” found at %@", text, [text substringWithRange:substringRange], NSStringFromRange(substringRange));
-			newWords += 1;
-			if ( !((substringRange.location == 0 && startsInWord) || (NSMaxRange(substringRange) == text.length && endsInWord)) || (startsInWord && endsInWord && addedWords > 0) ) {
-				addedWords += 1;
-				if ( firstAddedWordRange.location == NSNotFound ) {
-					firstAddedWordRange = substringRange;
-				}
-			}
-		}];
-		
-		__block NSInteger diff = (addedWords - replacedWords);
-		
-		if ( startsInWord && endsInWord && newWords == 0 && range.length == 0 && text.length > 0 ) {
-			// split word in two
-			diff += 1;
-		} else if ( firstAddedWordRange.location == 0 && [oldText rangeOfCharacterFromSet:[NSCharacterSet punctuationCharacterSet] options:(NSBackwardsSearch|NSAnchoredSearch)].location != NSNotFound ) {
-			// edge case of going from "don'" -> "don't"; we don't know that's actually a single word unless we combine the old + new text and look
-			// try to be easy on copying large strings here... by looking for a word boundary that can serve as our contraction prefix
-			NSRange wordRange = [LastWordWithPunctuationRegularExpression() rangeOfFirstMatchInString:oldText options:0 range:NSMakeRange(0, range.location)];
-			if ( wordRange.location != NSNotFound ) {
-				NSString *possibleSingleWord = [[oldText substringWithRange:wordRange] stringByAppendingString:text];
-				[possibleSingleWord enumerateSubstringsInRange:NSMakeRange(0, possibleSingleWord.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable substring, NSRange substringRange, NSRange enclosingRange, BOOL * _Nonnull stop) {
-					BRLog(@"Possible combined text “%@” word “%@” found at %@", possibleSingleWord, [possibleSingleWord substringWithRange:substringRange], NSStringFromRange(substringRange));
-					if ( substringRange.location == 0 && substringRange.length > wordRange.length ) {
-						diff -= 1;
-					}
-					*stop = YES;
-				}];
-			}
+		if ( end < replacedTextEnd ) {
+			end = replacedTextEnd;
 		}
 		
+		NSString *oldPassage = [oldText substringWithRange:NSMakeRange(start, end - start)];
+		NSRange replaceRange = NSMakeRange(range.location - start, range.length);
+		NSString *newPassage = [oldPassage stringByReplacingCharactersInRange:replaceRange withString:text];
+		
+		// count the words we now have
+		[newPassage enumerateSubstringsInRange:NSMakeRange(0, newPassage.length) options:(NSStringEnumerationByWords|NSStringEnumerationSubstringNotRequired) usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+			BRLog(@"Next text “%@” word “%@” found at %@; %@", newPassage, [newPassage substringWithRange:substringRange], NSStringFromRange(substringRange), NSStringFromRange(range));
+			addedWordCount += 1;
+		}];
+		
+		// our final count is the difference between what we have now and what we used to have
+		NSInteger diff = (addedWordCount - replacedWordCount);
 		NSUInteger finalWordCount = (startingWordCount + diff);
 		BRLog(@"Got final word count %lu for text: %@", (unsigned long)finalWordCount, [oldText stringByReplacingCharactersInRange:range withString:text]);
 		if ( wordCount != finalWordCount ) {
