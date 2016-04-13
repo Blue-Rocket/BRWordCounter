@@ -1,7 +1,7 @@
 PODS:
-  - BRWordCounter (2.0.0):
-    - BRWordCounter/Main (= 2.0.0)
-  - BRWordCounter/Main (2.0.0)
+  - BRWordCounter (2.0.1):
+    - BRWordCounter/Main (= 2.0.1)
+  - BRWordCounter/Main (2.0.1)
 
 DEPENDENCIES:
   - BRWordCounter (from `../`)
@@ -11,6 +11,6 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  BRWordCounter: 5b6f20b4ff6f2a7d69abbb3dddb9c1102a64bb34
+  BRWordCounter: f6c3753f5c736923ffce6c5534eb9cb9e63fdf3f
 
 COCOAPODS: 0.39.0

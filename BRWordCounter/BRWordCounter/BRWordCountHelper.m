@@ -135,7 +135,7 @@ static inline NSString *CurrentTextInView(UITextView *view) {
 	}
 	dispatch_async(queue, ^{
 		__block NSUInteger count = 0;
-		[string enumerateSubstringsInRange:NSMakeRange(0, string.length) options:NSStringEnumerationByWords usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+		[string enumerateSubstringsInRange:NSMakeRange(0, string.length) options:(NSStringEnumerationByWords|NSStringEnumerationSubstringNotRequired) usingBlock:^(NSString * _Nullable word, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
 			count += 1;
 		}];
 		dispatch_async(dispatch_get_main_queue(), ^{
