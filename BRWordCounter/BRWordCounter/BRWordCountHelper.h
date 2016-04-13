@@ -12,6 +12,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ Class to efficiently keep track of the word count of an editable text view. As changes
+ are made to the text in the configured text view, this class will calculate the total 
+ word count of the text in the background, and then call on a @c BRWordCountDelegate
+ instance with the results.
+ 
+ This class works by setting it as the delegate of a @c UITextView. The only method
+ this delegate actually uses is @c textView:shouldChangeTextInRange:replacementText:
+ however, so you can forward that method call to this object if you already have a
+ delegate configured on a text view you'd also like to track the word count on.
+ */
 @interface BRWordCountHelper : NSObject <UITextViewDelegate>
 
 /** The delegate to respond to word count events. */
