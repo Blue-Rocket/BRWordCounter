@@ -109,6 +109,54 @@
 	[self waitForExpectationsWithTimeout:1 handler:nil];
 }
 
+- (void)testInitializeWithTextView {
+	id textView = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	NSString *initialText = @"Here is some text for you to start with.";
+	NSUInteger expectedCount = 9;
+
+	OCMExpect([textView text]).andReturn(initialText);
+	OCMExpect([delegate wordCounter:anything() wordCountDidChange:expectedCount])
+		.andPost([NSNotification notificationWithName:@"WordCountDidChange" object:nil]);
+	
+	[self expectationForNotification:@"WordCountDidChange" object:nil handler:^BOOL(NSNotification * _Nonnull notification) {
+		return YES;
+	}];
+
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithTextView:textView delegate:delegate];
+	
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(expectedCount));
+
+	OCMVerifyAll(textView);
+	OCMVerifyAll(delegate);
+}
+
+- (void)testInitializeWithEmptyTextView {
+	id textView = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	NSString *initialText = @"";
+	NSUInteger expectedCount = 0;
+	
+	OCMExpect([textView text]).andReturn(initialText);
+	OCMExpect([delegate wordCounter:anything() wordCountDidChange:expectedCount])
+	.andPost([NSNotification notificationWithName:@"WordCountDidChange" object:nil]);
+	
+	[self expectationForNotification:@"WordCountDidChange" object:nil handler:^BOOL(NSNotification * _Nonnull notification) {
+		return YES;
+	}];
+	
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithTextView:textView delegate:delegate];
+	
+	[self waitForExpectationsWithTimeout:1 handler:nil];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(expectedCount));
+	
+	OCMVerifyAll(textView);
+	OCMVerifyAll(delegate);
+}
+
 - (void)testTyping {
 	BRWordCountHelper *counter = [BRWordCountHelper new];
 	id textViewMock = OCMClassMock([UITextView class]);

@@ -38,6 +38,9 @@ static const char * kWordCountQueueName = "us.bluerocket.BRWordCountHelper";
 		self.delegate = delegate;
 		[BRWordCountHelper countWordsInString:textView.text queue:queue finished:^(NSUInteger count) {
 			wordCount = count;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self.delegate wordCounter:self wordCountDidChange:count];
+			});
 		}];
 	}
 	return self;
