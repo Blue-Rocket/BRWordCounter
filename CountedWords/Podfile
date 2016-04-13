@@ -1,0 +1,9 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+platform :ios, '7.1'
+
+inhibit_all_warnings!
+
+target :CountedWords do
+	pod 'BRWordCounter',          :path => '../'
+end

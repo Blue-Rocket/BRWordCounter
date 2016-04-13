@@ -1,0 +1,10 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+platform :ios, '7.1'
+
+inhibit_all_warnings!
+
+target :BRWordCounterTests do
+	pod 'OCHamcrest',			'~> 5.2'
+	pod 'OCMock',				'~> 3.2'
+end
