@@ -40,6 +40,7 @@
 		C91CE8331CBC86040059E793 /* BRWordCountHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRWordCountHelper.m; sourceTree = "<group>"; };
 		C91CE8361CBC86110059E793 /* BRWordCountDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRWordCountDelegate.h; sourceTree = "<group>"; };
 		C9DACC441CBDD1C300B0280B /* BRWordCounter.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = BRWordCounter.podspec; path = ../../BRWordCounter.podspec; sourceTree = "<group>"; };
+		C9DACC461CBE224B00B0280B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../../README.md; sourceTree = "<group>"; };
 		F0665B9939538E0928E84677 /* libPods-BRWordCounterTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BRWordCounterTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -125,6 +126,7 @@
 		C91CE82F1CBC84A60059E793 /* Packaging */ = {
 			isa = PBXGroup;
 			children = (
+				C9DACC461CBE224B00B0280B /* README.md */,
 				C9DACC441CBDD1C300B0280B /* BRWordCounter.podspec */,
 				C91CE8301CBC84A60059E793 /* BRWordCounter.h */,
 			);
