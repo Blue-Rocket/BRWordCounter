@@ -288,8 +288,7 @@
 	NSString *insertText = @" More text.";
 	
 	OCMExpect([textViewMock text]).andReturn(startingText);
-	OCMExpect([delegate wordCounter:counter wordCountDidChange:6]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);
-	
+	OCMExpect([delegate wordCounter:counter wordCountDidChange:6]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);	
 	[self expectationForNotification:@"WordCountDidChange" object:counter handler:^BOOL(NSNotification * _Nonnull notification) {
 		return YES;
 	}];
@@ -320,7 +319,7 @@
 	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(4));
 	
 	OCMVerifyAll(textViewMock);
-	OCMVerifyAll(delegate);
+	OCMVerifyAllWithDelay(delegate, 0.1);
 }
 
 - (void)testPasteAtEndUnchangedWords {
@@ -339,7 +338,91 @@
 	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(4));
 	
 	OCMVerifyAll(textViewMock);
+	OCMVerifyAllWithDelay(delegate, 0.1);
+}
+
+- (void)testReplaceAtStartUnchangedWords {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *startingText = @"This is the text";
+	NSString *insertText = @"THAT";
+	
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	
+	[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(0, 4) replacementText:insertText];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(4));
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAllWithDelay(delegate, 0.1);
+}
+
+- (void)testReplaceInMiddleUnchangedWords {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *startingText = @"This is the text";
+	NSString *insertText = @"IS THE";
+	
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	
+	[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(5, 6) replacementText:insertText];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(4));
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAllWithDelay(delegate, 0.1);
+}
+
+- (void)testReplaceInMiddleCombineWords {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *startingText = @"This is the text";
+	NSString *insertText = @"IS";
+	NSRange replaceRange = NSMakeRange(5, 6);
+	NSUInteger finalWordCount = 3;
+	
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	OCMExpect([delegate wordCounter:counter wordCountDidChange:finalWordCount]).andPost([NSNotification notificationWithName:@"WordCountDidChange" object:counter]);
+	[self expectationForNotification:@"WordCountDidChange" object:counter handler:^BOOL(NSNotification * _Nonnull notification) {
+		return YES;
+	}];
+	
+	[counter textView:textViewMock shouldChangeTextInRange:replaceRange replacementText:insertText];
+
+	[self waitForExpectationsWithTimeout:2 handler:nil];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(finalWordCount));
+	
+	OCMVerifyAll(textViewMock);
 	OCMVerifyAll(delegate);
+}
+
+- (void)testReplaceAtEndUnchangedWords {
+	BRWordCountHelper *counter = [[BRWordCountHelper alloc] initWithWordCount:4];
+	id textViewMock = OCMClassMock([UITextView class]);
+	id delegate = OCMProtocolMock(@protocol(BRWordCountDelegate));
+	counter.delegate = delegate;
+	
+	NSString *startingText = @"This is the text";
+	NSString *insertText = @"FOOBAR";
+	
+	OCMExpect([textViewMock text]).andReturn(startingText);
+	
+	[counter textView:textViewMock shouldChangeTextInRange:NSMakeRange(12, 4) replacementText:insertText];
+	
+	assertThatUnsignedInteger(counter.wordCount, equalToUnsignedInteger(4));
+	
+	OCMVerifyAll(textViewMock);
+	OCMVerifyAllWithDelay(delegate, 0.1);
 }
 
 @end
